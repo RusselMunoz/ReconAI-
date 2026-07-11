@@ -33,15 +33,6 @@ To run ReconAI locally:
    ```
 5. Open `http://localhost:8000` in your web browser.
 
-*Deployed Demo:* [Live Demo URL]
-
-## Demo Script
-* **0:00 - 0:10**: Introduce ReconAI and its goal of automated bookkeeping reconciliation on AMD hardware.
-* **0:10 - 0:25**: Present the user interface showing the pre-loaded bank transactions and supplier invoices side-by-side.
-* **0:25 - 0:45**: Click the "Run Reconciliation" button to trigger the AMD-optimized Fireworks.ai API, showing real-time AI matches, confidence scores, and reasoning flags (e.g., duplicates, mismatches).
-* **0:45 - 0:55**: Explain the cryptographic hash chain output that renders the ledger tamper-evident.
-* **0:55 - 1:00**: Conclude by showing the performance metrics indicating inference completed in under 3 seconds.
-
 ## What's Next
 * **File Uploads**: Add CSV and PDF import capability to allow bookkeepers to upload custom bank statements and invoices.
 * **Accounting Integrations**: Integrate the QuickBooks Online and Xero APIs to sync transactions automatically.
