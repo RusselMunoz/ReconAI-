@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReconAI — AI-Powered Reconciliation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --border-color: #1f2937;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            padding: 2rem 1.5rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-group h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+        }
+
+        .logo-group p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .btn-reconcile {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-reconcile:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-reconcile:active {
+            transform: translateY(0);
+        }
+
+        .btn-reconcile:disabled {
+            background: #374151;
+            color: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Input Grid */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid var(--accent-blue);
+            padding-left: 0.75rem;
+        }
+
+        .badge-count {
+            background-color: #1f2937;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            color: var(--text-secondary);
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: #1f2937;
+            color: var(--text-primary);
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-mono {
+            font-family: var(--font-mono);
+        }
+
+        /* Results Panel */
+        .results-panel {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-matched {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-duplicate {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .badge-mismatch {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .badge-missing {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* Accordion / Details */
+        details {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-top: 2rem;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        summary {
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+            color: var(--text-primary);
+        }
+
+        .hash-chain-list {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .hash-chain-item {
+            background-color: #1f2937;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-blue);
+            font-size: 0.8rem;
+        }
+
+        .hash-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .hash-value {
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-group">
+                <h1>ReconAI</h1>
+                <p>AI-Powered Reconciliation for Bookkeepers (AMD Hackathon MVP)</p>
+            </div>
+            <button id="reconcileBtn" class="btn-reconcile" onclick="runReconciliation()">
+                <div id="btnSpinner" class="spinner"></div>
+                <span id="btnText">Run Reconciliation</span>
+            </button>
+        </header>
+
+        <!-- Input Data Preloaded Display -->
+        <div class="input-grid">
+            <div class="card">
+                <div class="card-title">
+                    <span>Bank Transactions</span>
+                    <span class="badge-count">20 Items</span>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Merchant / Payee</th>
+                                <th>Source</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody">
+                            <!-- Preloaded by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span>Supplier Invoices</span>
+                    <span class="badge-count">17 Items</span>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Supplier</th>
+                                <th>Ref #</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoicesBody">
+                            <!-- Preloaded by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reconciled Results Panel -->
+        <div id="resultsPanel" class="results-panel card">
+            <div class="card-title">Reconciled Results</div>
+            <div class="table-container" style="max-height: none; margin-bottom: 1.5rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TX ID</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Source</th>
+                            <th>Reconciliation Status</th>
+                            <th>Reason / Explanation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Hash Chain Verification Accordion -->
+        <details id="hashAccordion" style="display: none;">
+            <summary>Cryptographic Hash Chain Logs (Tamper-Evidence Verification)</summary>
+            <div class="hash-chain-list" id="hashChainList">
+                <!-- Loaded dynamically -->
+            </div>
+        </details>
+    </div>
+
+    <script>
+        const transactions = [
+            {"id": "tx_01", "date": "2026-07-01", "amount": 15000.00, "description": "PLDT INC BILL PAYMENT", "source": "GCash"},
+            {"id": "tx_02", "date": "2026-07-02", "amount": 4500.25, "description": "MERALCO ONLINE PYMT", "source": "Bank"},
+            {"id": "tx_03", "date": "2026-07-03", "amount": 12500.00, "description": "GLOBE TELECOM BILL", "source": "Maya"},
+            {"id": "tx_04", "date": "2026-07-04", "amount": 850.00, "description": "GRAB CAR MANILA", "source": "GCash"},
+            {"id": "tx_05", "date": "2026-07-05", "amount": 3200.00, "description": "LALAMOVE CORP DELIVERY", "source": "Bank"},
+            {"id": "tx_06", "date": "2026-07-05", "amount": 24500.00, "description": "AYALA LAND LEASE PAYMENT", "source": "Bank"},
+            {"id": "tx_07", "date": "2026-07-06", "amount": 180.00, "description": "7-ELEVEN STORE CONV", "source": "GCash"},
+            {"id": "tx_08", "date": "2026-07-06", "amount": 6200.50, "description": "SM SUPERMARKET FOOD", "source": "Bank"},
+            {"id": "tx_09", "date": "2026-07-07", "amount": 950.00, "description": "ANGKAS RIDE PYMT", "source": "Maya"},
+            {"id": "tx_10", "date": "2026-07-08", "amount": 1500.00, "description": "NATIONAL BOOK STORE", "source": "GCash"},
+            {"id": "tx_11", "date": "2026-07-09", "amount": 3500.00, "description": "CONVERGE ICT PYMT", "source": "Bank"},
+            {"id": "tx_12", "date": "2026-07-09", "amount": 2200.00, "description": "SHELL PETROLEUM FILLUP", "source": "Bank"},
+            {"id": "tx_13", "date": "2026-07-05", "amount": 850.00, "description": "GRAB CAR MANILA", "source": "GCash"},
+            {"id": "tx_14", "date": "2026-07-07", "amount": 180.00, "description": "7-ELEVEN STORE CONV", "source": "GCash"},
+            {"id": "tx_15", "date": "2026-07-08", "amount": 5015.00, "description": "MAYA MERCHANT PYMT", "source": "GCash"},
+            {"id": "tx_16", "date": "2026-07-09", "amount": 10050.00, "description": "JOLLIBEE FOODS CORP", "source": "Bank"},
+            {"id": "tx_17", "date": "2026-07-10", "amount": 247.00, "description": "SHOPEE PH DELIVERY", "source": "Maya"},
+            {"id": "tx_18", "date": "2026-07-10", "amount": 50000.00, "description": "CASH WITHDRAWAL OVER THE COUNTER", "source": "Bank"},
+            {"id": "tx_19", "date": "2026-07-11", "amount": 1200.00, "description": "STARBUCKS COFFEE MAKATI", "source": "GCash"},
+            {"id": "tx_20", "date": "2026-07-11", "amount": 450.00, "description": "NETFLIX PHILIPPINES", "source": "Maya"}
+        ];
+
+        const invoices = [
+            {"id": "inv_01", "date": "2026-07-01", "amount": 15000.00, "supplier": "PLDT Inc.", "reference_number": "INV-PLDT-889"},
+            {"id": "inv_02", "date": "2026-07-02", "amount": 4500.25, "supplier": "Meralco", "reference_number": "INV-MER-102"},
+            {"id": "inv_03", "date": "2026-07-03", "amount": 12500.00, "supplier": "Globe Telecom", "reference_number": "INV-GLOBE-454"},
+            {"id": "inv_04", "date": "2026-07-04", "amount": 850.00, "supplier": "Grab Philippines", "reference_number": "INV-GRAB-001"},
+            {"id": "inv_05", "date": "2026-07-05", "amount": 3200.00, "supplier": "Lalamove", "reference_number": "INV-LALA-330"},
+            {"id": "inv_06", "date": "2026-07-05", "amount": 24500.00, "supplier": "Ayala Land Inc.", "reference_number": "INV-ALI-998"},
+            {"id": "inv_07", "date": "2026-07-06", "amount": 180.00, "supplier": "7-Eleven Store", "reference_number": "INV-711-502"},
+            {"id": "inv_08", "date": "2026-07-06", "amount": 6200.50, "supplier": "SM Supermarket", "reference_number": "INV-SM-203"},
+            {"id": "inv_09", "date": "2026-07-07", "amount": 950.00, "supplier": "Angkas", "reference_number": "INV-ANG-774"},
+            {"id": "inv_10", "date": "2026-07-08", "amount": 1500.00, "supplier": "National Book Store", "reference_number": "INV-NBS-109"},
+            {"id": "inv_11", "date": "2026-07-09", "amount": 3500.00, "supplier": "Converge ICT Solutions", "reference_number": "INV-CONV-382"},
+            {"id": "inv_12", "date": "2026-07-09", "amount": 2200.00, "supplier": "Shell Petroleum", "reference_number": "INV-SHELL-120"},
+            {"id": "inv_15", "date": "2026-07-08", "amount": 5000.00, "supplier": "Maya Merchant", "reference_number": "INV-MAYA-607"},
+            {"id": "inv_16", "date": "2026-07-09", "amount": 10000.00, "supplier": "Jollibee Foods Corp", "reference_number": "INV-JFC-890"},
+            {"id": "inv_17", "date": "2026-07-10", "amount": 250.00, "supplier": "Shopee PH", "reference_number": "INV-SHOPEE-112"},
+            {"id": "inv_18", "date": "2026-07-10", "amount": 8900.00, "supplier": "Max's Restaurant", "reference_number": "INV-MAX-99"},
+            {"id": "inv_19", "date": "2026-07-11", "amount": 1230.00, "supplier": "Mercury Drug", "reference_number": "INV-MERC-04"}
+        ];
+
+        // Format currency helper
+        function formatPHP(val) {
+            return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val);
+        }
+
+        // Render Preloaded Inputs
+        function initData() {
+            const txBody = document.getElementById("transactionsBody");
+            txBody.innerHTML = transactions.map(t => `
+                <tr>
+                    <td>${t.date}</td>
+                    <td class="font-mono">${t.description}</td>
+                    <td>${t.source}</td>
+                    <td class="text-right font-mono">${formatPHP(t.amount)}</td>
+                </tr>
+            `).join('');
+
+            const invBody = document.getElementById("invoicesBody");
+            invBody.innerHTML = invoices.map(i => `
+                <tr>
+                    <td>${i.date}</td>
+                    <td>${i.supplier}</td>
+                    <td class="font-mono">${i.reference_number}</td>
+                    <td class="text-right font-mono">${formatPHP(i.amount)}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function runReconciliation() {
+            const btn = document.getElementById("reconcileBtn");
+            const spinner = document.getElementById("btnSpinner");
+            const btnText = document.getElementById("btnText");
+
+            // Disable button, show loading
+            btn.disabled = true;
+            spinner.style.display = "block";
+            btnText.innerText = "Reconciling...";
+
+            try {
+                const response = await fetch("/reconcile", { method: "POST" });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || "Reconciliation failed.");
+                }
+
+                const data = await response.json();
+                renderResults(data);
+
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = "none";
+                btnText.innerText = "Run Reconciliation";
+            }
+        }
+
+        function renderResults(data) {
+            const resultsPanel = document.getElementById("resultsPanel");
+            const resultsBody = document.getElementById("resultsBody");
+            const hashAccordion = document.getElementById("hashAccordion");
+            const hashChainList = document.getElementById("hashChainList");
+
+            resultsBody.innerHTML = "";
+
+            // Populate the reconciled table by matching results to transactions
+            transactions.forEach(tx => {
+                const match = data.matches.find(m => m.transaction_id === tx.id);
+                const flag = data.flags.find(f => f.transaction_id === tx.id);
+
+                let statusBadge = "";
+                let explanation = "Pending review";
+
+                if (match) {
+                    statusBadge = `<span class="result-badge badge-matched">✓ Matched (${match.confidence}%)</span>`;
+                    explanation = `Matched to invoice ${match.invoice_id}. ${match.reason}`;
+                } else if (flag) {
+                    if (flag.type === "duplicate") {
+                        statusBadge = `<span class="result-badge badge-duplicate">⚠ Duplicate</span>`;
+                    } else if (flag.type === "mismatch") {
+                        statusBadge = `<span class="result-badge badge-mismatch">⚠ Mismatch</span>`;
+                    } else if (flag.type === "missing_invoice") {
+                        statusBadge = `<span class="result-badge badge-missing">⚠ Missing Invoice</span>`;
+                    }
+                    explanation = flag.reason;
+                } else {
+                    statusBadge = `<span class="result-badge">Unprocessed</span>`;
+                }
+
+                resultsBody.innerHTML += `
+                    <tr>
+                        <td class="font-mono">${tx.id}</td>
+                        <td class="font-mono">${tx.description}</td>
+                        <td class="font-mono">${formatPHP(tx.amount)}</td>
+                        <td>${tx.source}</td>
+                        <td>${statusBadge}</td>
+                        <td>${explanation}</td>
+                    </tr>
+                `;
+            });
+
+            // Populate the Hash Chain accordion (first 5 records)
+            hashChainList.innerHTML = "";
+            const chainSubset = data.hash_chain.slice(0, 5);
+            chainSubset.forEach((item, index) => {
+                hashChainList.innerHTML += `
+                    <div class="hash-chain-item">
+                        <div class="hash-meta">
+                            <strong>Record Block #${index + 1}</strong>
+                            <span class="font-mono" style="color: var(--accent-blue)">TX: ${item.transaction_id || "N/A"} ${item.invoice_id ? '| INV: ' + item.invoice_id : ''}</span>
+                        </div>
+                        <div style="margin-bottom: 0.25rem;">
+                            <span style="color: var(--text-secondary)">Prev Hash:</span>
+                            <span class="font-mono hash-value">${item.previous_hash}</span>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-secondary)">Block Hash:</span>
+                            <span class="font-mono hash-value" style="color: var(--success)">${item.hash}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Show hidden sections
+            resultsPanel.style.display = "block";
+            hashAccordion.style.display = "block";
+
+            // Scroll results into view smoothly
+            resultsPanel.scrollIntoView({ behavior: "smooth" });
+        }
+
+        // Initialize preloaded data on page load
+        window.onload = initData;
+    </script>
+</body>
+</html>
